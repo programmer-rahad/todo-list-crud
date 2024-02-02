@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App (Sunday, 13 June 2021)</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+       * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      h2 {
+        font-size: 30px;
+        font-family: cursive;
+        letter-spacing: 1px;
+      }
+      .d-none {
+        display: none;
+      }
+      .color-red {
+        color: red;
+      }
+      .line-through {
+        text-decoration: line-through;
+      }
+      ul {
+        list-style: none;
+      }
+      li {
+        border: 1px solid #ddd;
+        margin: 9px 0;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+      }
+      li:hover {
+        border-color: lightgreen;
+        color: rgb(21, 170, 21);
+      }
+      li span:first-child {
+        font-family: arial;
+        font-size: 16px;
+        line-height: 18px;
+        margin-right: auto;
+      }
+
+      li span:hover {
+      }
+      li i {
+        color: rgb(224, 82, 82);
+        cursor: pointer;
+        font-size: 21px;
+        transform: translateY(1px);
+        margin-left: 6px;
+      }
+      li .fa-edit {
+        color: rgb(103, 224, 103);
+        margin-right: 2.5px;
+      }
+      li i:hover {
+        color: red;
+      }
+      h2,
+      h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        font-family: arial;
+      }
+      h4 {
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: #f878bc;
+      }
+      .container {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        /* border: 1px solid; */
+        padding: 37px 17px 35px;
+        background-color: #f1f1f1;
+        margin-top: 45px;
+        margin-bottom: 30px; 
+       
+      }
+      @media(min-width: 992px) {
+        .container {
+          border-radius: 5px;
+        }
+      }
+      input {
+        background: #fff;
+        border: 1.1px solid #ddd;
+        padding: 11px 15px;
+        width: 100%;
+        border-radius: 4px;
+        outline: none;
+      }
+      input[type="text"]:focus {
+        border-color: lightgreen;
+      }
+      input[type="submit"],
+      input[type="button"] {
+        width: auto;
+        margin-top: 10px;
+        background-color: rgb(50, 216, 50);
+        color: #fff;
+        font-weight: 700;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 10px 25px;
+      }
+      input[type="submit"]:hover {
+        background-color: #19c519;
+      }
+      input[type="button"].bg-black {
+        background: rgb(7, 7, 7);
+      }
+      input[type="button"].bg-black:hover {
+        background: rgb(85, 85, 85);
+      }
+      input[type="button"]:hover {
+        background-color: rgb(36, 230, 69);
+        cursor: pointer;
+      }
+      .filter-todo {
+        margin-top: 40px;
+        margin-bottom: 15px;
+      }
+      .todo-list {
+        margin-top: 10px;
+      }
+      .todo-list h4 {
+        margin-top: 20px;
+      }
+      span {
+        outline: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Todo Application</h2>
+      <div class="todo-add">
+        <input type="text" placeholder="Add Todo" />
+        <input type="button" value="Add Task" />
+      </div>
+      <div class="filter-todo">
+        <input type="text" placeholder="Filter Task" />
+      </div>
+      <div class="todo-list">
+        <h4>Todo List</h4>
+        <ul></ul>
+        <input class="bg-black" type="button" value="Clear All" />
+      </div>
+    </div>
+    <script>
+      var todos = localStorage.getItem("todos");
+      todos = todos ? JSON.parse(todos) : [];
+
+      var addTaskBtn = document.querySelector(".todo-add input[type=button]");
+      var filterTaskInput = document.querySelector(
+        ".filter-todo input[type=text]"
+      );
+      var todoList = document.querySelector(".todo-list");
+      var listUL = document.querySelector(".todo-list ul");
+      var addTaskInput = document.querySelector(".todo-add input");
+      var clearAllBtn = document.querySelector(".todo-list input[type=button]");
+
+      function submitTask() {
+        var taskInputVal = addTaskInput.value.trim();
+        if (taskInputVal.length < 3) {
+          addTaskInput.value = "Please write at least 3 charcters.";
+          addTaskInput.classList.add("color-red");
+          setTimeout(function () {
+            addTaskInput.value = "";
+            addTaskInput.classList.remove("color-red");
+          }, 1400);
+        } else {
+          const newTask = {
+            text: taskInputVal,
+            isDone: false,
+            id: Math.random(),
+          };
+          addTask(newTask);
+          addTaskToLocalStorage(newTask);
+          addTaskInput.value = "";
+          todoList.classList.remove("d-none");
+          filterTaskInput.classList.remove("d-none");
+          addTaskBtn.value = "Add Task";
+        }
+      }
+      addTaskBtn.addEventListener("click", submitTask);
+
+      // UI
+      function showTasks() {
+        for (var i = 0; i < todos.length; i++) addTask(todos[i]);
+        showHideTasks();
+      }
+      document.addEventListener("DOMContentLoaded", showTasks);
+
+      function addTask(task) {
+        var li = document.createElement("li");
+        var lineThrough;
+        lineThrough = task.isDone ? "line-through" : "";
+        li.id = task.id;
+        li.innerHTML =
+          "<span class=" +
+          lineThrough +
+          ">" +
+          task.text +
+          '</span> <span class="fa fa-edit"></span><i class="fa fa-times"></i>';
+        listUL.append(li);
+      }
+      function toggleEditDelete(e) {
+        var targetParent = e.target.parentElement;
+        var target = e.target;
+        // Toggle Todo
+        if (
+          targetParent.firstElementChild === target &&
+          target.nodeName === "SPAN"
+        ) {
+          target.classList.toggle("line-through");
+          toggleTodoLocalStorage(targetParent.id);
+        }
+        // Delete Todo
+        if (
+          targetParent.children[2] === target &&
+          target.nodeName === "I" &&
+          confirm("Are you sure?")
+        ) {
+          targetParent.remove();
+          removeTaskFromLocalStorage(targetParent.id);
+          showHideTasks();
+        }
+        // Edit Todo
+        if (targetParent.children[1] === target && target.nodeName === "SPAN") {
+          editTask(targetParent.id);
+        }
+      }
+      listUL.addEventListener("click", toggleEditDelete);
+
+      function filterTasks() {}
+      filterTaskInput.addEventListener("keyup", function (e) {
+        var value = this.value.trim().toLowerCase();
+
+        for (var i = 0; i < todos.length; i++) {
+          const inputVal = todos[i].text.toLowerCase();
+          if (inputVal.indexOf(value) !== -1) {
+            listUL.children[i].classList.remove("d-none");
+          } else {
+            listUL.children[i].classList.add("d-none");
+          }
+        }
+      });
+
+      function showHideTasks() {
+        if (!todos.length) {
+          todoList.classList.add("d-none");
+          filterTaskInput.classList.add("d-none");
+        }
+      }
+
+      // Backend / Database
+
+      // Add Task to LocalStorage
+      function addTaskToLocalStorage(task) {
+        var todo = {
+          text: task.text,
+          isDone: false,
+          id: task.id,
+        };
+        todos.push(todo);
+        localStorage.setItem("todos", JSON.stringify(todos));
+      }
+
+      // RemoveTaskFromLocalStorage
+      function removeTaskFromLocalStorage(id) {
+        for (var i = 0; i < todos.length; i++) {
+          if (todos[i].id == id) {
+            todos.splice(i, 1);
+            localStorage.setItem("todos", JSON.stringify(todos));
+          }
+        }
+      }
+
+      // Toggle Todo from LocalStorage
+      function toggleTodoLocalStorage(id) {
+        let newTodos = [];
+        for (let i = 0; i < todos.length; i++) {
+          if (todos[i].id == id) {
+            newTodos[i] = {
+              text: todos[i].text,
+              isDone: !todos[i].isDone,
+              id: todos[i].id,
+            };
+          } else {
+            newTodos[i] = todos[i];
+          }
+        }
+        todos = newTodos;
+        localStorage.setItem("todos", JSON.stringify(todos));
+      }
+
+      // Edit Task
+      function editTask(id) {
+        var obj;
+        for (let i = 0; i < todos.length; i++) {
+          if (todos[i].id == id) {
+            obj = todos[i];
+            todos.splice(i, 1);
+            listUL.children[i].remove();
+            localStorage.setItem("todos", JSON.stringify(todos));
+            showHideTasks();
+          }
+        }
+        addTaskInput.value = obj.text;
+        addTaskInput.focus();
+        addTaskBtn.value = "Update Task";
+      }
+
+      clearAllBtn.addEventListener("click", function () {
+        if (confirm("Are you sure?")) {
+          todos = [];
+          localStorage.setItem("todos", JSON.stringify(todos));
+          listUL.innerHTML = "";
+          showHideTasks();
+        }
+      });
+    </script>
+  </body>
+</html>
